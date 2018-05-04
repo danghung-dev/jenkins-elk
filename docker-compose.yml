@@ -1,9 +1,9 @@
-version: '2'
+version: '3'
 
 services:
   nginx-proxy:
-    image: jwilder/nginx-proxy
-    container_name:  nginx-proxy
+    image: nginx
+    container_name: nginx-proxy
     ports:
      - "80:80"
      - "443:443"
@@ -13,23 +13,35 @@ services:
       - ./nginx/certs:/etc/nginx/certs:ro
       - ./htpasswd:/etc/nginx/htpasswd
       - /var/run/docker.sock:/tmp/docker.sock:ro
-      - /etc/nginx/vhost.d
-      - /usr/share/nginx/html
-      - /etc/nginx/conf.d
+      - ./nginx/vhost.d:/etc/nginx/vhost.d
+      - ./nginx/html:/usr/share/nginx/html
+      - ./nginx/conf.d:/etc/nginx/conf.d
     labels:
       - com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy
 
+  nginx-gen:
+    image: jwilder/docker-gen
+    command: -notify-sighup ${NGINX_WEB:-nginx-web} -watch -wait 5s:30s /etc/docker-gen/templates/nginx.tmpl /etc/nginx/conf.d/default.conf
+    container_name: ${DOCKER_GEN:-nginx-gen}
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./nginx.tmpl:/etc/docker-gen/templates/nginx.tmpl:ro
+      - ./nginx/vhost.d:/etc/nginx/vhost.d
+      - ./nginx/html:/usr/share/nginx/html
+      - ./nginx/conf.d:/etc/nginx/conf.d
 
   letsencrypt-nginx-proxy-companion:
     image: jrcs/letsencrypt-nginx-proxy-companion
     container_name: letsencrypt
     networks:
      - elk
-    volumes_from:
-     - nginx-proxy
     volumes:
      - ./nginx/certs:/etc/nginx/certs:rw
      - /var/run/docker.sock:/var/run/docker.sock:ro
+     - ./nginx/vhost.d:/etc/nginx/vhost.d
+     - ./nginx/html:/usr/share/nginx/html
+     - ./nginx/conf.d:/etc/nginx/conf.d
     depends_on:
      - nginx-proxy
 
@@ -46,26 +58,6 @@ services:
       ES_JAVA_OPTS: "-Xmx256m -Xms256m"
     networks:
       - elk
-
-  logstash:
-    build:
-      context: logstash/
-    volumes:
-      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
-      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
-    ports:
-      - "5000:5000"
-    environment:
-      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
-    networks:
-      - elk
-    environment:
-     - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
-     - LETSENCRYPT_HOST=${LOG_LETSENCRYPT_HOST}
-     - VIRTUAL_HOST=${LOG_VIRTUAL_HOST}
-     - VIRTUAL_PORT=21201
-    depends_on:
-      - elasticsearch
 
   kibana:
     build:
