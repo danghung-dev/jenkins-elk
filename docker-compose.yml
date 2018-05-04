@@ -12,6 +12,7 @@ services:
       - ./nginx/certs:/etc/nginx/certs:ro
       - vhost:/etc/nginx/vhost.d
       - html:/usr/share/nginx/html
+      - conf:/etc/nginx/conf.d
       - /var/run/docker.sock:/tmp/docker.sock:ro
     labels:
       - com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy
@@ -26,6 +27,7 @@ services:
      - /var/run/docker.sock:/var/run/docker.sock:ro
      - vhost:/etc/nginx/vhost.d
      - html:/usr/share/nginx/html
+     - conf:/etc/nginx/conf.d
 
   jenkins:
     image: danghung/jenkins
@@ -40,11 +42,11 @@ services:
      - LETSENCRYPT_HOST=${JENKINS_LETSENCRYPT_HOST}
      - VIRTUAL_HOST=${JENKINS_VIRTUAL_HOST}
      - VIRTUAL_PORT=8080
-    expose:
-     - "8080"
+
 volumes:
   vhost:
   html:
+  conf:
 networks:
   nginx:
     driver: bridge
