@@ -19,8 +19,10 @@ nano .env # modify .env
 # create elastic data folder
 mkdir elasticdata
 sudo chown 1000:1000 elasticdata
+docker-compose build
 docker-compose up -d
 ```
 
 *Note*
+
 sudo chown 1000:1000 elasticdata # You must do it, check doc [here](https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html)

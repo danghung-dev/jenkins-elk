@@ -30,6 +30,8 @@ services:
     volumes:
      - ./nginx/certs:/etc/nginx/certs:rw
      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+     - nginx-proxy
 
   elasticsearch:
     build:
