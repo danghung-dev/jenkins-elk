@@ -1,3 +1,4 @@
 .env
 jenkins_home/
 nginx/certs
+elasticdata/

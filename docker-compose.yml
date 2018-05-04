@@ -1,4 +1,5 @@
-version: '3.2'
+version: '2'
+
 services:
   nginx-proxy:
     image: jwilder/nginx-proxy
@@ -7,33 +8,83 @@ services:
      - "80:80"
      - "443:443"
     networks:
-     - nginx
+     - elk
     volumes:
       - ./nginx/certs:/etc/nginx/certs:ro
-      - vhost:/etc/nginx/vhost.d
-      - html:/usr/share/nginx/html
-      - conf:/etc/nginx/conf.d
+      - ./htpasswd:/etc/nginx/htpasswd
       - /var/run/docker.sock:/tmp/docker.sock:ro
+      - /etc/nginx/vhost.d
+      - /usr/share/nginx/html
+      - /etc/nginx/conf.d
     labels:
       - com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy
+
 
   letsencrypt-nginx-proxy-companion:
     image: jrcs/letsencrypt-nginx-proxy-companion
     container_name: letsencrypt
     networks:
-     - nginx
+     - elk
+    volumes_from:
+     - nginx-proxy
     volumes:
      - ./nginx/certs:/etc/nginx/certs:rw
      - /var/run/docker.sock:/var/run/docker.sock:ro
-     - vhost:/etc/nginx/vhost.d
-     - html:/usr/share/nginx/html
-     - conf:/etc/nginx/conf.d
+
+  elasticsearch:
+    build:
+      context: elasticsearch/
+    volumes:
+      - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+      - ./elasticdata:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+    networks:
+      - elk
+
+  logstash:
+    build:
+      context: logstash/
+    volumes:
+      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
+    ports:
+      - "5000:5000"
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+    networks:
+      - elk
+    environment:
+     - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
+     - LETSENCRYPT_HOST=${LOG_LETSENCRYPT_HOST}
+     - VIRTUAL_HOST=${LOG_VIRTUAL_HOST}
+     - VIRTUAL_PORT=21201
+    depends_on:
+      - elasticsearch
+
+  kibana:
+    build:
+      context: kibana/
+    volumes:
+      - ./kibana/config/:/usr/share/kibana/config:ro
+    networks:
+      - elk
+    environment:
+     - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
+     - LETSENCRYPT_HOST=${KIBANA_LETSENCRYPT_HOST}
+     - VIRTUAL_HOST=${KIBANA_VIRTUAL_HOST}
+     - VIRTUAL_PORT=5601
+    depends_on:
+      - elasticsearch
 
   jenkins:
     image: danghung/jenkins
     container_name: jenkins
     networks:
-     - nginx
+     - elk
     volumes:
      - ./jenkins/jenkins_home:/var/jenkins_home
      - /var/run/docker.sock:/var/run/docker.sock
@@ -43,10 +94,7 @@ services:
      - VIRTUAL_HOST=${JENKINS_VIRTUAL_HOST}
      - VIRTUAL_PORT=8080
 
-volumes:
-  vhost:
-  html:
-  conf:
 networks:
-  nginx:
+
+  elk:
     driver: bridge
