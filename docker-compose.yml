@@ -47,27 +47,23 @@ services:
     networks:
       - elk
 
-  logstash:
+  fluentd:
     build:
-      context: logstash/
+      context: fluentd/
+    links:
+      - "elasticsearch"
     volumes:
-      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
-      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
+      - ./fluentd/conf:/fluentd/etc
     ports:
-      - "5000:5000"
-    environment:
-      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+      - "24224:24224"
+      - "24224:24224/udp"
+      - "9880:9880"
     networks:
       - elk
-    environment:
-     - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
-     - LETSENCRYPT_HOST=${LOG_LETSENCRYPT_HOST}
-     - VIRTUAL_HOST=${LOG_VIRTUAL_HOST}
-     - VIRTUAL_PORT=21201
     depends_on:
       - elasticsearch
     expose:
-      - "21201"
+      - "9880"
 
   kibana:
     build:
@@ -96,7 +92,7 @@ services:
     networks:
       - elk
     depends_on:
-      - elasticsearch      
+      - elasticsearch
 
   jenkins:
     image: danghung/jenkins
