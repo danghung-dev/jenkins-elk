@@ -1,10 +1,11 @@
 # How to use
 
 #### Create basic auth for web
-1. Goto [htpasswd](http://www.htaccesstools.com/htpasswd-generator/) to generate username, password
+1. Goto [bcrypt](https://passwordhashing.com/BCrypt) to generate password
 
-2. create file in htpasswd folder # the file must be the same with your website (ex: kibana.danghung.top)
-3. paste generated htpasswd
+2. paste password to elasticsearch/config/sg/sg_internal_users.yml
+3. Add more user (if needed)
+4. If you change password for logstash or kibanaserver, you must also change it in fluentd/conf/fluent.conf and kibana/config/kibana.yml
 
 #### Jenkins
 If you have jenkins_home data do copy it to ./jenkins/jenkins_home
@@ -21,6 +22,11 @@ mkdir elasticdata
 sudo chown 1000:1000 elasticdata
 docker-compose build
 docker-compose up -d
+
+# wait a second then
+docker-compose exec -T elasticsearch bin/init_sg.sh
+
+# goto web localhost:5601
 ```
 
 *Note*
