@@ -10,6 +10,17 @@
 #### Jenkins
 If you have jenkins_home data do copy it to ./jenkins/jenkins_home
 
+```
+# if you want just run only jenkins
+# generate id_rsa key
+cd jenkins
+ssh-keygen -t rsa -b 4096 -C "your-email"
+# when asked for path just type .
+
+docker-compose -f docker-compose.jenkins.yml build
+docker-compose up -f docker-compose.jenkins.yml
+```
+
 #### Run docker
 cd < project-folder >
 
