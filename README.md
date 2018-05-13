@@ -40,6 +40,22 @@ docker-compose exec -T elasticsearch bin/init_sg.sh
 # goto web localhost:5601
 ```
 
+# AWS ECS
+- ssh to ecs
+```
+mkdir -p /usr/share/elasticsearch
+cd /usr/share/elasticsearch
+mkdir data
+mkdir config
+cd config
+vi elasticsearch.yml
+# copy content to this file
+# save & quit
+```
+- Create interal ALB
+- Create target group
+- Choose this ALB when create a service
+
 *Note*
 
 sudo chown 1000:1000 elasticdata # You must do it, check doc [here](https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html)
