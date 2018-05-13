@@ -27,7 +27,9 @@ RUN apt-get install jq -y
 RUN curl -o /bin/slack https://raw.githubusercontent.com/rockymadden/slack-cli/master/src/slack
 RUN chmod +x /bin/slack
 # install kubectl
-RUN apt-get install -y kubectl
+ADD https://storage.googleapis.com/kubernetes-release/release/v1.6.4/bin/linux/amd64/kubectl /usr/local/bin/kubectl
+RUN chmod +x /usr/local/bin/kubectl
+RUN kubectl version --client
 
 # copy id_rsa, make it work
 COPY id_rsa /root/.ssh/id_rsa
@@ -38,4 +40,4 @@ RUN chmod 600 /root/.ssh/id_rsa.pub
 # Create known_hosts
 RUN touch /root/.ssh/known_hosts
 # Add github (or bitbucket) fingerprint to known hosts
-RUN ssh-keyscan -t rsa bitbucket.org >> /root/.ssh/known_hosts
+RUN ssh-keyscan -t rsa bitbucket.org github.com gitlab.com >> /root/.ssh/known_hosts
