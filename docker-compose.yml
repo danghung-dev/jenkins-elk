@@ -20,19 +20,7 @@ services:
       - com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy
 
 
-  letsencrypt-nginx-proxy-companion:
-    image: jrcs/letsencrypt-nginx-proxy-companion
-    container_name: letsencrypt
-    networks:
-     - elk
-    volumes_from:
-     - nginx-proxy
-    volumes:
-     - ./nginx/certs:/etc/nginx/certs:rw
-     - /var/run/docker.sock:/var/run/docker.sock:ro
-    depends_on:
-     - nginx-proxy
-
+ 
   elasticsearch:
     build:
       context: elasticsearch/
@@ -79,6 +67,8 @@ services:
      - VIRTUAL_PORT=5601
     depends_on:
       - elasticsearch
+    ports:
+      - "5601:5601"
     expose:
       - "5601"
 
@@ -94,21 +84,7 @@ services:
     depends_on:
       - elasticsearch
 
-  jenkins:
-    image: danghung/jenkins
-    container_name: jenkins
-    networks:
-     - elk
-    volumes:
-     - ./jenkins/jenkins_home:/var/jenkins_home
-     - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-     - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
-     - LETSENCRYPT_HOST=${JENKINS_LETSENCRYPT_HOST}
-     - VIRTUAL_HOST=${JENKINS_VIRTUAL_HOST}
-     - VIRTUAL_PORT=8080
-    expose:
-      - "8080"
+
 networks:
   elk:
     driver: bridge
