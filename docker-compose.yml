@@ -12,27 +12,41 @@ services:
       - "9200:9200"
       - "9300:9300"
     environment:
-      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+      ES_JAVA_OPTS: "-Xmx512m -Xms512m"
     networks:
       - nginx
 
-  fluentd:
+  # fluentd:
+  #   build:
+  #     context: fluentd/
+  #   links:
+  #     - "elasticsearch"
+  #   volumes:
+  #     - ./fluentd/conf:/fluentd/etc
+  #   ports:
+  #     - "24224:24224"
+  #     - "24224:24224/udp"
+  #     - "9880:9880"
+  #   networks:
+  #     - nginx
+  #   depends_on:
+  #     - elasticsearch
+  #   expose:
+  #     - "9880"
+  logstash:
     build:
-      context: fluentd/
-    links:
-      - "elasticsearch"
+      context: logstash/
     volumes:
-      - ./fluentd/conf:/fluentd/etc
+      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
     ports:
-      - "24224:24224"
-      - "24224:24224/udp"
-      - "9880:9880"
+      - "21201:21201"
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
     networks:
       - nginx
     depends_on:
       - elasticsearch
-    expose:
-      - "9880"
 
   kibana:
     build:
